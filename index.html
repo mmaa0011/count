@@ -1,239 +1,48 @@
-<!-- index.html -->
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>あなたは何人目の訪問者？</title>
-  <meta name="description" content="GitHub Pagesで公開するだけで「あなたは何人目の訪問者か」を表示するデモです。">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>訪問者カウンター</title>
   <style>
-    :root{
-      --bg:#0f1724;
-      --card:#0b1220;
-      --accent:#7dd3fc;
-      --muted:#9aa8b6;
+    body {
+      font-family: sans-serif;
+      background: #f7f7f7;
+      padding: 40px;
+      text-align: center;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
-      background:linear-gradient(180deg,var(--bg) 0%, #07101b 100%);
-      color:#e6f0f6;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-    }
-    .card{
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border:1px solid rgba(255,255,255,0.05);
-      padding:28px;
-      border-radius:16px;
-      width:min(720px, 96%);
-      text-align:center;
-      box-shadow: 0 6px 30px rgba(2,6,23,0.6);
-    }
-    h1{margin:0 0 12px;font-size:20px;font-weight:600}
-    p.lead{margin:0 0 22px;color:var(--muted)}
-    .counter{
-      display:flex;
-      gap:14px;
-      align-items:baseline;
-      justify-content:center;
-      flex-wrap:wrap;
-    }
-    .num{
-      font-size:72px;
-      font-weight:800;
-      letter-spacing:-2px;
-      background: linear-gradient(90deg,var(--accent), #60a5fa);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    .suffix{font-size:20px;color:var(--muted)}
-    .meta{margin-top:18px;color:var(--muted);font-size:14px}
-    .btns{margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-    .btn{
-      background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;color:var(--muted);cursor:pointer;font-size:14px
-    }
-    .small{font-size:12px;color:#8ea0af;margin-top:8px}
-    @media (max-width:480px){
-      .num{font-size:44px}
+    .num {
+      font-size: 64px;
+      font-weight: bold;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <main class="card" role="main">
-    <h1>ようこそ！</h1>
-    <p class="lead">このページは「あなたは何人目の訪問者か」を表示します（ページ読み込みで +1）。</p>
 
-    <div class="counter" aria-live="polite">
-      <div class="num" id="count">--</div>
-      <div class="suffix" id="ordinal">人目</div>
-    </div>
+<h1>あなたはこのページの訪問者</h1>
+<div class="num" id="count">読み込み中...</div>
 
-    <div class="meta" id="meta">読み込み中…</div>
+<script>
+async function loadCounter() {
+  const namespace = "mmaa0011_github_io";
+  const key = "count_page";
 
-    <div class="btns">
-      <button class="btn" id="refresh">もう一度カウント（再読み込みで増えます）</button>
-      <button class="btn" id="uniqueToggle">ユニークカウント: オフ</button>
-    </div>
-    <div class="small">GitHub Pages にアップロードして公開すると、世界中の人の読み込みが反映されます。</div>
-  </main>
+  // ※ CORS が安定して通る update を使用する
+  const url = `https://api.countapi.xyz/update/${namespace}/${key}?amount=1`;
 
-  <script>
-    /************************************************************************
-     * カウンター説明（書き換えて使ってください）
-     * - CountAPI を使う: https://api.countapi.xyz/hit/{namespace}/{key}
-     * - ページロードごとに +1 したい場合は /hit を叩く
-     * - 「ユニーク（24時間以内は1回だけカウント）」にしたい場合は
-     *   フロントで localStorage にタイムスタンプを保存して制御（実装済み）
-     *
-     * 使い方（変更推奨箇所）:
-     *   const NAMESPACE = 'your-namespace';   // 任意。公開リポジトリ名やドメイン名が良い
-     *   const KEY = 'your-key';               // 任意。ページ固有キー
-     *
-     ************************************************************************/
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    document.getElementById("count").textContent = data.value + " 人目";
+  } catch (e) {
+    document.getElementById("count").textContent = "エラー";
+    console.error(e);
+  }
+}
 
-    // ===== 設定 =====
-    const NAMESPACE = 'github.pages';      // ←任意（公開前に変更推奨）
-    const KEY = 'my-site-counter';         // ←任意（公開前に変更推奨）
-    const API_BASE = 'https://api.countapi.xyz';
-    const uniqueWindowMs = 24 * 60 * 60 * 1000; // 24時間をユニークの期間とする
+loadCounter();
+</script>
 
-    // ===== 要素 =====
-    const elCount = document.getElementById('count');
-    const elOrdinal = document.getElementById('ordinal');
-    const elMeta = document.getElementById('meta');
-    const btnRefresh = document.getElementById('refresh');
-    const btnUniqueToggle = document.getElementById('uniqueToggle');
-
-    // ===== ユニークモード（フロント制御） =====
-    // localStorageキー
-    const LS_KEY = `counter:${location.hostname}:${NAMESPACE}:${KEY}:lastCounted`;
-    let uniqueMode = false;
-
-    // ordinal helper（英語風の 1st/2nd/3rd ではなく "1st/2nd" を日本語の「人目」に合わせつつ装飾）
-    function ordinalSuffix(n){
-      // 日本語では単純に「人目」でOKだが、英語っぽい suffix を付けたい場合はこちらを編集
-      return '人目';
-    }
-
-    // number -> formatted with commas
-    function fmt(n){ return (typeof n === 'number') ? n.toLocaleString() : String(n); }
-
-    // API を呼んでカウントする（/hit）
-    async function hitCountApi(){
-      const url = `${API_BASE}/hit/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(KEY)}`;
-      const resp = await fetch(url, { cache:'no-store' });
-      if(!resp.ok) throw new Error('CountAPI response not ok: ' + resp.status);
-      return resp.json(); // {value: N, ...}
-    }
-
-    // API から現在値を取得する（/get）。/hit 叩きたくないときに使う
-    async function getCountApi(){
-      const url = `${API_BASE}/get/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(KEY)}`;
-      const resp = await fetch(url, { cache:'no-store' });
-      if(!resp.ok) throw new Error('CountAPI get response not ok: ' + resp.status);
-      return resp.json(); // {value: N, ...}
-    }
-
-    // フォールバック：ローカルカウント（ネット不能時）
-    function fallbackLocalIncrement(){
-      const k = `fallback-counter:${NAMESPACE}:${KEY}`;
-      const v = parseInt(localStorage.getItem(k) || '0', 10) + 1;
-      localStorage.setItem(k, String(v));
-      return v;
-    }
-
-    // ユニークモードでカウントすべきか判定
-    function shouldCountUnique(){
-      const last = parseInt(localStorage.getItem(LS_KEY) || '0', 10);
-      const now = Date.now();
-      return (now - last) > uniqueWindowMs;
-    }
-
-    // ユニークモードでカウントしたと記録する
-    function markCountedNow(){
-      localStorage.setItem(LS_KEY, String(Date.now()));
-    }
-
-    // メイン：カウント処理
-    async function doCount(allowApiHit = true){
-      elMeta.textContent = 'カウント中…';
-      try {
-        // ユニークモード中で既にカウント済みなら API を叩かない（表示は /get で最新値だけ取りにいく）
-        if (uniqueMode) {
-          if (!shouldCountUnique()) {
-            // 24時間以内にカウント済み → 現在の global 値を取得して表示
-            try {
-              const data = await getCountApi();
-              elCount.textContent = fmt(data.value);
-              elOrdinal.textContent = ordinalSuffix(data.value);
-              elMeta.textContent = 'ユニークモード（24時間内は1回だけカウント） — 既にあなたはカウント済みです。';
-              return;
-            } catch (e){
-              // fallback: local value
-              const fv = parseInt(localStorage.getItem(`fallback-counter:${NAMESPACE}:${KEY}`) || '0', 10);
-              elCount.textContent = fmt(fv);
-              elOrdinal.textContent = ordinalSuffix(fv);
-              elMeta.textContent = 'オフラインフォールバック表示（ユニークモード）';
-              return;
-            }
-          }
-        }
-
-        // 通常は /hit を叩いて +1 してもらう
-        if (allowApiHit) {
-          const res = await hitCountApi();
-          const v = res && res.value ? res.value : null;
-          if (v === null) throw new Error('invalid hit response');
-          elCount.textContent = fmt(v);
-          elOrdinal.textContent = ordinalSuffix(v);
-          elMeta.textContent = 'グローバルカウント（CountAPI）に記録しました。';
-          if (uniqueMode) markCountedNow();
-          return;
-        } else {
-          // allowApiHit=false の場合は get して表示のみ
-          const res = await getCountApi();
-          const v = res.value;
-          elCount.textContent = fmt(v);
-          elOrdinal.textContent = ordinalSuffix(v);
-          elMeta.textContent = 'グローバルカウントを取得しました（増加はしていません）。';
-          return;
-        }
-      } catch (err) {
-        console.warn('Count API failed:', err);
-        // フォールバック：ローカルインクリメント
-        const v = fallbackLocalIncrement();
-        elCount.textContent = fmt(v);
-        elOrdinal.textContent = ordinalSuffix(v);
-        elMeta.textContent = 'CountAPI に接続できませんでした — ローカルフォールバックで表示しています。';
-        if (uniqueMode) markCountedNow();
-      }
-    }
-
-    // 初期表示：読み込み時にカウントを試みる
-    (function init(){
-      // ボタンイベント
-      btnRefresh.addEventListener('click', () => {
-        // リフレッシュは再カウントを試みる（即座に +1）
-        doCount(true);
-      });
-
-      btnUniqueToggle.addEventListener('click', () => {
-        uniqueMode = !uniqueMode;
-        btnUniqueToggle.textContent = `ユニークカウント: ${uniqueMode ? 'オン' : 'オフ'}`;
-        // トグルしたら即座に挙動更新（オンなら24時間判定が働く）
-        doCount(true);
-      });
-
-      // ページ読み込み時は自動でカウント
-      doCount(true);
-    })();
-
-  </script>
 </body>
 </html>
