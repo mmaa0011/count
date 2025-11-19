@@ -29,7 +29,8 @@ async function loadCounter() {
   const key = "count_page";
 
   // ※ CORS が安定して通る update を使用する
-  const url = `https://api.countapi.xyz/update/${namespace}/${key}?amount=1`;
+ const url = `https://counterapi.dev/update/${namespace}/${key}?amount=1`;
+
 
   try {
     const res = await fetch(url);
